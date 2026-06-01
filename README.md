@@ -1,5 +1,7 @@
 # jit-python
 
+> **Note:** This project is a proof of concept and is not intended for production use.
+
 Dynamically generate and improve Python methods at runtime using an AI agent powered by [Google ADK](https://google.github.io/adk-docs/).
 
 ## Inspiration
