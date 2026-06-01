@@ -18,6 +18,7 @@ from pydantic import BaseModel
 
 logging.basicConfig(level=logging.INFO)
 logging.getLogger("google_adk").setLevel(logging.WARNING)
+logging.getLogger("google_genai").setLevel(logging.WARNING)
 logging.getLogger("httpx").setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
@@ -73,6 +74,12 @@ pip_install_skill = models.Skill(
 
 class JitPython:
     def __init__(self):
+        warnings.warn(
+            "JitPython executes AI-generated code and can install arbitrary pip packages "
+            "at runtime. This is a significant security risk. Run at your own risk.",
+            UserWarning,
+            stacklevel=2,
+        )
         self.root_agent = Agent(
             name="root_agent",
             description="Root agent for JIT Python method generation and improvement.",
@@ -82,13 +89,15 @@ class JitPython:
                 You are an expert software engineer with expertise in Python. You have 2 jobs:
                 1. Generate Python methods dynamically based on the method name and description provided.
                 2. Improve the generated methods based on user feedback to ensure they meet the requirements and are optimized for performance and readability.
-                Make sure that the generated method is valid Python code and can be executed without errors.
 
-                You have access to a Google Search tool which you can use to gather information needed for method generation.
+                IMPORTANT: All imports MUST be placed inside the function body, not at the top level.
+                The generated code is executed via exec() and will not have access to any external imports.
+                Every module the function needs (e.g. 're', 'os', 'json', 'logging', etc.) must be imported inside the function itself.
+                Additionally, you can use the `pip-install-skill` to write code that installs pip packages at runtime in case you need to generate methods that require external dependencies.
+                All code will be executed at runtime, so ensure that the generated code is correct and includes all necessary imports and error handling.
+
+                You have also access to a Google Search tool which you can use to gather information needed for method generation.
                 Use it if you need to look up anything to generate the method correctly.
-
-                You also have access to the `pip-install-skill` which you can use to learn how to write code that installs
-                pip packages at runtime in case you need to generate methods that require external dependencies.
             """  # noqa: E501
             ),
             input_schema=MethodGenInput,
